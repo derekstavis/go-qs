@@ -12,7 +12,7 @@ var nameRegex = pcre.MustCompile(`\A[\[\]]*([^\[\]]+)\]*`, 0)
 var objectRegex1 = pcre.MustCompile(`^\[\]\[([^\[\]]+)\]$`, 0)
 var objectRegex2 = pcre.MustCompile(`^\[\](.+)$`, 0)
 
-func Parse(qs string) (map[string]interface{}, error) {
+func Unmarshal(qs string) (map[string]interface{}, error) {
 	components := strings.Split(qs, "&")
 	params := map[string]interface{}{}
 

@@ -23,7 +23,7 @@ package main
 
 import "github.com/derekstavis/go-qs"
 
-query, err := qs.Parse("foo=bar&names[]=foo&names[]=bar")
+query, err := qs.Unmarshal("foo=bar&names[]=foo&names[]=bar")
 
 if err != nil {
   fmt.Printf("%#+v\n", query)
