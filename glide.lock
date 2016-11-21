@@ -1,8 +1,20 @@
-hash: bb1a943ab8485a5b1255d7e386c6ffe402ae65ecdb01814c1fce71d38694a305
-updated: 2016-11-21T00:49:44.13415017-02:00
+hash: 62a95f96f1a2abb66870ba173f1f17d4150ff8f0615a586daffdf08aa5bad4a1
+updated: 2016-11-21T13:35:25.55067932-02:00
 imports:
 - name: github.com/glenn-brown/golang-pkg-pcre
   version: 48bb82a8b8ceea98f4e97825b43870f6ba1970d6
   subpackages:
   - src/pkg/pcre
-testImports: []
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib

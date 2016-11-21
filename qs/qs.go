@@ -8,11 +8,11 @@ import (
 	"github.com/glenn-brown/golang-pkg-pcre/src/pkg/pcre"
 )
 
-var nameRegex pcre.Regexp = pcre.MustCompile(`\A[\[\]]*([^\[\]]+)\]*`, 0)
-var objectRegex1 pcre.Regexp = pcre.MustCompile(`^\[\]\[([^\[\]]+)\]$`, 0)
-var objectRegex2 pcre.Regexp = pcre.MustCompile(`^\[\](.+)$`, 0)
+var nameRegex = pcre.MustCompile(`\A[\[\]]*([^\[\]]+)\]*`, 0)
+var objectRegex1 = pcre.MustCompile(`^\[\]\[([^\[\]]+)\]$`, 0)
+var objectRegex2 = pcre.MustCompile(`^\[\](.+)$`, 0)
 
-func Parse(qs string) map[string]interface{} {
+func Parse(qs string) (map[string]interface{}, error) {
 	components := strings.Split(qs, "&")
 	params := map[string]interface{}{}
 
@@ -31,19 +31,21 @@ func Parse(qs string) map[string]interface{} {
 			key = tuple[0]
 		}
 
-		value := ""
+		value := interface{}(nil)
 
 		if len(tuple) > 1 {
 			value = tuple[1]
 		}
 
-		normalizeParams(params, key, value)
+		if err := normalizeParams(params, key, value); err != nil {
+			return nil, err
+		}
 	}
 
-	return params
+	return params, nil
 }
 
-func normalizeParams(params map[string]interface{}, key string, value interface{}) {
+func normalizeParams(params map[string]interface{}, key string, value interface{}) error {
 	nameMatcher := nameRegex.MatcherString(key, 0)
 	k := nameMatcher.GroupString(1)
 	after := ""
@@ -55,38 +57,37 @@ func normalizeParams(params map[string]interface{}, key string, value interface{
 	objectMatcher1 := objectRegex1.MatcherString(after, 0)
 	objectMatcher2 := objectRegex2.MatcherString(after, 0)
 
-	fmt.Printf("key: %s, after: %s, value: %s\n", k, after, value)
-
 	if k == "" {
-		return
+		return nil
+
 	} else if after == "" {
 		params[k] = value
-		return
+		return nil
+
 	} else if after == "[]" {
 		ival, ok := params[k]
 
 		if !ok {
 			params[k] = []interface{}{value}
-			return
+			return nil
 		}
 
 		array, ok := ival.([]interface{})
 
 		if !ok {
-			panic(fmt.Sprintf("Expected type '[]interface{}' for key '%s', but got '%T'", k, ival))
+			return fmt.Errorf("Expected type '[]interface{}' for key '%s', but got '%T'", k, ival)
 		}
 
 		params[k] = append(array, value)
-		return
+		return nil
+
 	} else if objectMatcher1.Matches() || objectMatcher2.Matches() {
 
 		childKey := ""
 
 		if objectMatcher1.Matches() {
 			childKey = objectMatcher1.GroupString(1)
-		}
-
-		if objectMatcher2.Matches() {
+		} else if objectMatcher2.Matches() {
 			childKey = objectMatcher2.GroupString(1)
 		}
 
@@ -101,27 +102,23 @@ func normalizeParams(params map[string]interface{}, key string, value interface{
 			array, ok := ival.([]interface{})
 
 			if !ok {
-				panic(fmt.Sprintf("Expected type '[]interface{}' for key '%s', but got '%T'", k, ival))
+				return fmt.Errorf("Expected type '[]interface{}' for key '%s', but got '%T'", k, ival)
 			}
 
 			if length := len(array); length > 0 {
 				if hash, ok := array[length-1].(map[string]interface{}); ok {
-					if ival, ok := hash[childKey]; ok {
-						if childHash, ok := ival.(map[string]interface{}); ok {
-							normalizeParams(childHash, childKey, value)
-							return
-						}
+					if _, ok := hash[childKey]; !ok {
+						normalizeParams(hash, childKey, value)
+						return nil
 					}
 				}
 			}
-
-			fmt.Println(childKey)
 
 			newHash := map[string]interface{}{}
 			normalizeParams(newHash, childKey, value)
 			params[k] = append(array, newHash)
 
-			return
+			return nil
 		}
 	}
 
@@ -129,15 +126,18 @@ func normalizeParams(params map[string]interface{}, key string, value interface{
 
 	if !ok {
 		params[k] = map[string]interface{}{}
+		ival = params[k]
 	}
 
 	hash, ok := ival.(map[string]interface{})
 
 	if !ok {
-		panic(fmt.Sprintf("Expected type 'map[string]interface{}' for key '%s', but got '%T'", k, ival))
+		return fmt.Errorf("Expected type 'map[string]interface{}' for key '%s', but got '%T'", k, ival)
 	}
 
-	fmt.Println("kldjhfkjshdfkjsdhf")
-	normalizeParams(hash, after, value)
+	if err := normalizeParams(hash, after, value); err != nil {
+		return err
+	}
 
+	return nil
 }

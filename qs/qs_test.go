@@ -1,86 +1,163 @@
 package qs
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestParse(t *testing.T) {
-	Parse("foo")
-	//shouldequal "foo" => nil
-	Parse("foo=")
-	//shouldequal "foo" => ""
-	Parse("foo=bar")
-	//shouldequal "foo" => "bar"
-	Parse("foo=\"bar\"")
-	//shouldequal "foo" => "\"bar\""
+	hash, err := Parse("foo")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": nil})
+	}
 
-	Parse("foo=bar&foo=quux")
-	//shouldequal "foo" => "quux"
-	Parse("foo&foo=")
-	//shouldequal "foo" => ""
-	Parse("foo=1&bar=2")
-	//shouldequal "foo" => "1", "bar" => "2"
-	Parse("&foo=1&&bar=2")
-	//shouldequal "foo" => "1", "bar" => "2"
-	Parse("foo&bar=")
-	//shouldequal "foo" => nil, "bar" => ""
-	Parse("foo=bar&baz=")
-	//shouldequal "foo" => "bar", "baz" => ""
-	Parse("my+weird+field=q1%212%22%27w%245%267%2Fz8%29%3F")
-	//shouldequal "my weird field" => "q1!2\"'w$5&7/z8)?"
+	hash, err = Parse("foo=")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": ""})
+	}
 
-	Parse("a=b&pid%3D1234=1023")
-	//shouldequal "pid=1234" => "1023", "a" => "b"
+	hash, err = Parse("foo=bar")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": "bar"})
+	}
 
-	Parse("foo[]")
-	//shouldequal "foo" => [nil]
-	Parse("foo[]=")
-	//shouldequal "foo" => [""]
-	Parse("foo[]=bar")
-	//shouldequal "foo" => ["bar"]
+	hash, err = Parse("foo=\"bar\"")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": "\"bar\""})
+	}
 
-	Parse("foo[]=1&foo[]=2")
-	//shouldequal "foo" => ["1", "2"]
-	Parse("foo=bar&baz[]=1&baz[]=2&baz[]=3")
-	//shouldequal "foo" => "bar", "baz" => ["1", "2", "3"]
-	Parse("foo[]=bar&baz[]=1&baz[]=2&baz[]=3")
-	//shouldequal "foo" => ["bar"], "baz" => ["1", "2", "3"]
+	hash, err = Parse("foo=bar&foo=quux")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": "quux"})
+	}
 
-	Parse("x[y][z]=1")
-	//shouldequal "x" => {"y" => {"z" => "1"}}
-	Parse("x[y][z][]=1")
-	//shouldequal "x" => {"y" => {"z" => ["1"]}}
-	Parse("x[y][z]=1&x[y][z]=2")
-	//shouldequal "x" => {"y" => {"z" => "2"}}
-	Parse("x[y][z][]=1&x[y][z][]=2")
-	//shouldequal "x" => {"y" => {"z" => ["1", "2"]}}
+	hash, err = Parse("foo&foo=")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": ""})
+	}
 
-	Parse("x[y][][z]=1")
-	//shouldequal "x" => {"y" => [{"z" => "1"}]}
-	Parse("x[y][][z][]=1")
-	//shouldequal "x" => {"y" => [{"z" => ["1"]}]}
-	Parse("x[y][][z]=1&x[y][][w]=2")
-	//shouldequal "x" => {"y" => [{"z" => "1", "w" => "2"}]}
+	hash, err = Parse("foo=1&bar=2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": "1", "bar": "2"})
+	}
 
-	Parse("x[y][][v][w]=1")
-	//shouldequal "x" => {"y" => [{"v" => {"w" => "1"}}]}
-	Parse("x[y][][z]=1&x[y][][v][w]=2")
-	//shouldequal "x" => {"y" => [{"z" => "1", "v" => {"w" => "2"}}]}
+	hash, err = Parse("&foo=1&&bar=2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": "1", "bar": "2"})
+	}
 
-	Parse("x[y][][z]=1&x[y][][z]=2")
-	//shouldequal "x" => {"y" => [{"z" => "1"}, {"z" => "2"}]}
-	Parse("x[y][][z]=1&x[y][][w]=a&x[y][][z]=2&x[y][][w]=3")
-	//shouldequal "x" => {"y" => [{"z" => "1", "w" => "a"}, {"z" => "2", "w" => "3"}]}
+	hash, err = Parse("foo&bar=")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": nil, "bar": ""})
+	}
 
-	t.Log("---------------------------------------------------------")
+	hash, err = Parse("foo=bar&baz=")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": "bar", "baz": ""})
+	}
 
-	Parse("x[y]=1&x[y]z=2")
-	//shouldraise(TypeError)
-	//shouldequal "expected Hash (got String) for param `y'"
+	hash, err = Parse("my+weird+field=q1%212%22%27w%245%267%2Fz8%29%3F")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"my weird field": `q1!2"'w$5&7/z8)?`})
+	}
 
-	Parse("x[y]=1&x[]=1")
-	//shouldraise(TypeError)
-	//shouldequal "expected Array (got Hash) for param `x'"
+	hash, err = Parse("a=b&pid%3D1234=1023")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"pid=1234": "1023", "a": "b"})
+	}
 
-	Parse("x[y]=1&x[y][][w]=2")
-	//shouldraise(TypeError)
-	//shouldequal "expected Array (got String) for param `y'"
+	hash, err = Parse("foo[]")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": []interface{}{nil}})
+	}
+
+	hash, err = Parse("foo[]=")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": []interface{}{""}})
+	}
+
+	hash, err = Parse("foo[]=bar")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": []interface{}{"bar"}})
+	}
+
+	hash, err = Parse("foo[]=1&foo[]=2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": []interface{}{"1", "2"}})
+	}
+
+	hash, err = Parse("foo=bar&baz[]=1&baz[]=2&baz[]=3")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": "bar", "baz": []interface{}{"1", "2", "3"}})
+	}
+
+	hash, err = Parse("foo[]=bar&baz[]=1&baz[]=2&baz[]=3")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": []interface{}{"bar"}, "baz": []interface{}{"1", "2", "3"}})
+	}
+
+	hash, err = Parse("x[y][z]=1")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": map[string]interface{}{"z": "1"}}})
+	}
+
+	hash, err = Parse("x[y][z][]=1")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": map[string]interface{}{"z": []interface{}{"1"}}}})
+	}
+
+	hash, err = Parse("x[y][z]=1&x[y][z]=2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": map[string]interface{}{"z": "2"}}})
+	}
+
+	hash, err = Parse("x[y][z][]=1&x[y][z][]=2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": map[string]interface{}{"z": []interface{}{"1", "2"}}}})
+	}
+
+	hash, err = Parse("x[y][][z]=1")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": []interface{}{map[string]interface{}{"z": "1"}}}})
+	}
+
+	hash, err = Parse("x[y][][z][]=1")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": []interface{}{map[string]interface{}{"z": []interface{}{"1"}}}}})
+	}
+
+	hash, err = Parse("x[y][][z]=1&x[y][][w]=2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": []interface{}{map[string]interface{}{"z": "1", "w": "2"}}}})
+	}
+
+	hash, err = Parse("x[y][][v][w]=1")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": []interface{}{map[string]interface{}{"v": map[string]interface{}{"w": "1"}}}}})
+	}
+
+	hash, err = Parse("x[y][][z]=1&x[y][][v][w]=2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": []interface{}{map[string]interface{}{"z": "1", "v": map[string]interface{}{"w": "2"}}}}})
+	}
+
+	hash, err = Parse("x[y][][z]=1&x[y][][z]=2")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": []interface{}{map[string]interface{}{"z": "1"}, map[string]interface{}{"z": "2"}}}})
+	}
+
+	hash, err = Parse("x[y][][z]=1&x[y][][w]=a&x[y][][z]=2&x[y][][w]=3")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": []interface{}{map[string]interface{}{"z": "1", "w": "a"}, map[string]interface{}{"z": "2", "w": "3"}}}})
+	}
+
+	hash, err = Parse("x[y]=1&x[y]z=2")
+	assert.Error(t, err)
+
+	hash, err = Parse("x[y]=1&x[]=1")
+	assert.Error(t, err)
+
+	hash, err = Parse("x[y]=1&x[y][][w]=2")
+	assert.Error(t, err)
+
 }

@@ -3,3 +3,7 @@ import:
 - package: github.com/glenn-brown/golang-pkg-pcre
   subpackages:
   - src/pkg/pcre
+- package: github.com/stretchr/testify
+  version: v1.1.4
+  subpackages:
+  - assert
