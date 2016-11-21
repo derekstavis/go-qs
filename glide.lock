@@ -1,0 +1,8 @@
+hash: bb1a943ab8485a5b1255d7e386c6ffe402ae65ecdb01814c1fce71d38694a305
+updated: 2016-11-21T00:49:44.13415017-02:00
+imports:
+- name: github.com/glenn-brown/golang-pkg-pcre
+  version: 48bb82a8b8ceea98f4e97825b43870f6ba1970d6
+  subpackages:
+  - src/pkg/pcre
+testImports: []
