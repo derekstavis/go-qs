@@ -17,7 +17,7 @@ package.
 ## Compatibility
 
 `go-qs` is a port of [Rack's code](https://github.com/rack/rack/blob/rack-1.3/lib/rack/utils.rb#L114).
-All tests included into [test suite](https://github.com/derekstavis/go-qs/blob/master/qs/qs_test.go)
+All tests included into [test suite](https://github.com/derekstavis/go-qs/blob/master/qs/marshal_test.go)
 are also a port of [Rack tests](https://github.com/rack/rack/blob/rack-1.3/test/spec_utils.rb#L107),
 so this package keeps great compatibility with Rack implementation.
 
