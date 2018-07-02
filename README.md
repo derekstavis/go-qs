@@ -23,8 +23,6 @@ so this package keeps great compatibility with Rack implementation.
 
 ## Usage
 
-This package currently relies on libpcre++. Be sure to have it installed on your system before using it. See [here for more information](https://github.com/derekstavis/go-qs/tree/master/vendor/github.com/glenn-brown/golang-pkg-pcre).
-
 ### Unmarshal
 
 To unmarshal query strings to a `map[string]interface{}`:

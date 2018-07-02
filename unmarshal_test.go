@@ -6,7 +6,12 @@ import (
 )
 
 func TestUnmarshal(t *testing.T) {
-	hash, err := Unmarshal("foo")
+	hash, err := Unmarshal("")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{})
+	}
+
+	hash, err = Unmarshal("foo")
 	if assert.NoError(t, err) {
 		assert.Equal(t, hash, map[string]interface{}{"foo": nil})
 	}

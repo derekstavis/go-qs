@@ -3,22 +3,21 @@ package qs
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
-
-	"github.com/glenn-brown/golang-pkg-pcre/src/pkg/pcre"
 )
 
-var nameRegex = pcre.MustCompile(`\A[\[\]]*([^\[\]]+)\]*`, 0)
-var objectRegex1 = pcre.MustCompile(`^\[\]\[([^\[\]]+)\]$`, 0)
-var objectRegex2 = pcre.MustCompile(`^\[\](.+)$`, 0)
+var nameRegex = regexp.MustCompile(`\A[\[\]]*([^\[\]]+)\]*`)
+var objectRegex1 = regexp.MustCompile(`^\[\]\[([^\[\]]+)\]$`)
+var objectRegex2 = regexp.MustCompile(`^\[\](.+)$`)
 
 func Unmarshal(qs string) (map[string]interface{}, error) {
 	components := strings.Split(qs, "&")
 	params := map[string]interface{}{}
 
 	for _, c := range components {
-		tuple := strings.Split(c, "=")
 
+		tuple := strings.Split(c, "=")
 		for i, item := range tuple {
 			if unesc, err := url.QueryUnescape(item); err == nil {
 				tuple[i] = unesc
@@ -46,25 +45,24 @@ func Unmarshal(qs string) (map[string]interface{}, error) {
 }
 
 func normalizeParams(params map[string]interface{}, key string, value interface{}) error {
-	nameMatcher := nameRegex.MatcherString(key, 0)
-	k := nameMatcher.GroupString(1)
 	after := ""
 
-	if pos := nameRegex.FindIndex([]byte(key), 0); len(pos) == 2 {
+	if pos := nameRegex.FindIndex([]byte(key)); len(pos) == 2 {
 		after = key[pos[1]:]
 	}
 
-	objectMatcher1 := objectRegex1.MatcherString(after, 0)
-	objectMatcher2 := objectRegex2.MatcherString(after, 0)
-
-	if k == "" {
+	matches := nameRegex.FindStringSubmatch(key)
+	if len(matches) < 2 {
 		return nil
+	}
 
-	} else if after == "" {
+	k := matches[1]
+	if after == "" {
 		params[k] = value
 		return nil
+	}
 
-	} else if after == "[]" {
+	if after == "[]" {
 		ival, ok := params[k]
 
 		if !ok {
@@ -80,15 +78,18 @@ func normalizeParams(params map[string]interface{}, key string, value interface{
 
 		params[k] = append(array, value)
 		return nil
+	}
 
-	} else if objectMatcher1.Matches() || objectMatcher2.Matches() {
+	object1Matches := objectRegex1.FindStringSubmatch(after)
+	object2Matches := objectRegex2.FindStringSubmatch(after)
 
+	if len(object1Matches) > 1 || len(object2Matches) > 1 {
 		childKey := ""
 
-		if objectMatcher1.Matches() {
-			childKey = objectMatcher1.GroupString(1)
-		} else if objectMatcher2.Matches() {
-			childKey = objectMatcher2.GroupString(1)
+		if len(object1Matches) > 1 {
+			childKey = object1Matches[1]
+		} else if len(object2Matches) > 1 {
+			childKey = object2Matches[1]
 		}
 
 		if childKey != "" {
