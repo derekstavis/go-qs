@@ -4,3 +4,4 @@ import:
   version: v1.1.4
   subpackages:
   - assert
+  - require
