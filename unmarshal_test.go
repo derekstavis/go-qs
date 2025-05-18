@@ -1,8 +1,9 @@
 package qs
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnmarshal(t *testing.T) {
@@ -154,6 +155,11 @@ func TestUnmarshal(t *testing.T) {
 	hash, err = Unmarshal("x[y][][z]=1&x[y][][w]=a&x[y][][z]=2&x[y][][w]=3")
 	if assert.NoError(t, err) {
 		assert.Equal(t, hash, map[string]interface{}{"x": map[string]interface{}{"y": []interface{}{map[string]interface{}{"z": "1", "w": "a"}, map[string]interface{}{"z": "2", "w": "3"}}}})
+	}
+
+	hash, err = Unmarshal("foo=bar&baz=qwy?djc=dk&baz1=3")
+	if assert.NoError(t, err) {
+		assert.Equal(t, hash, map[string]interface{}{"foo": "bar", "baz": "qwy?djc=dk", "baz1": "3"})
 	}
 
 	hash, err = Unmarshal("x[y]=1&x[y]z=2")

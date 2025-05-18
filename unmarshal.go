@@ -17,7 +17,7 @@ func Unmarshal(qs string) (map[string]interface{}, error) {
 
 	for _, c := range components {
 
-		tuple := strings.Split(c, "=")
+		tuple := strings.SplitN(c, "=", 2)
 		for i, item := range tuple {
 			if unesc, err := url.QueryUnescape(item); err == nil {
 				tuple[i] = unesc
