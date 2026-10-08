@@ -172,3 +172,53 @@ func TestUnmarshal(t *testing.T) {
 	assert.Error(t, err)
 
 }
+
+func TestUnmarshalArrayObjectTypeConflicts(t *testing.T) {
+	queries := []struct {
+		query string
+		err   string
+	}{
+		{"x[][y]=1&x[][y][]=2", "Expected type '[]interface{}' for key 'y', but got 'string'"},
+		{"x[][y]=1&x[][y][z]=2", "Expected type 'map[string]interface{}' for key 'y', but got 'string'"},
+		{"x[][y][]=1&x[][y][z]=2", "Expected type 'map[string]interface{}' for key 'y', but got '[]interface {}'"},
+		{"x[][y][z]=1&x[][y][]=2", "Expected type '[]interface{}' for key 'y', but got 'map[string]interface {}'"},
+		{"x[][y][z]=1&x[][y][z][]=2", "Expected type '[]interface{}' for key 'z', but got 'string'"},
+		{"x[][][y]=1&x[][][y][]=2", "Expected type '[]interface{}' for key 'y', but got 'string'"},
+		{"x[parent][][y]=1&x[parent][][y][]=2", "Expected type '[]interface{}' for key 'y', but got 'string'"},
+	}
+
+	for _, test := range queries {
+		hash, err := Unmarshal(test.query)
+		if assert.Error(t, err, test.query) {
+			assert.Equal(t, test.err, err.Error(), test.query)
+		}
+		assert.Nil(t, hash, test.query)
+	}
+}
+
+func TestUnmarshalArrayObjectGrouping(t *testing.T) {
+	queries := []struct {
+		query string
+		hash  map[string]interface{}
+	}{
+		{
+			"x[][y]=1&x[][y]=2",
+			map[string]interface{}{"x": []interface{}{map[string]interface{}{"y": "1"}, map[string]interface{}{"y": "2"}}},
+		},
+		{
+			"x[][y]=1&x[][z]=2",
+			map[string]interface{}{"x": []interface{}{map[string]interface{}{"y": "1", "z": "2"}}},
+		},
+		{
+			"x[][y][]=1&x[][y][]=2",
+			map[string]interface{}{"x": []interface{}{map[string]interface{}{"y": []interface{}{"1", "2"}}}},
+		},
+	}
+
+	for _, test := range queries {
+		hash, err := Unmarshal(test.query)
+		if assert.NoError(t, err, test.query) {
+			assert.Equal(t, test.hash, hash, test.query)
+		}
+	}
+}

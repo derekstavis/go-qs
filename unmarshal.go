@@ -109,14 +109,15 @@ func normalizeParams(params map[string]interface{}, key string, value interface{
 			if length := len(array); length > 0 {
 				if hash, ok := array[length-1].(map[string]interface{}); ok {
 					if _, ok := hash[childKey]; !ok {
-						normalizeParams(hash, childKey, value)
-						return nil
+						return normalizeParams(hash, childKey, value)
 					}
 				}
 			}
 
 			newHash := map[string]interface{}{}
-			normalizeParams(newHash, childKey, value)
+			if err := normalizeParams(newHash, childKey, value); err != nil {
+				return err
+			}
 			params[k] = append(array, newHash)
 
 			return nil
